@@ -4,7 +4,6 @@
 > A zero-config, plug-and-play CLI to create, manage, and run projects in Python, Node.js, and C/C++.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![Status](https://img.shields.io/badge/Status-Work_in_Progress-orange)]()
 
 ## 💡 The Concept
