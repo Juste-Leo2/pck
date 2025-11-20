@@ -1,0 +1,25 @@
+settings:
+  base_dir: "langage"
+
+tools:
+  uv:
+    url: "https://github.com/astral-sh/uv/releases/download/0.9.10/uv-x86_64-pc-windows-msvc.zip"
+    exe_path: "uv/uv.exe" 
+    folder_name: "uv"
+
+  node:
+    url: "https://nodejs.org/dist/v24.11.1/node-v24.11.1-win-x64.zip"
+    exe_path: "nodejs/node-v24.11.1-win-x64/node.exe"
+    npm_path: "nodejs/node-v24.11.1-win-x64/node_modules/npm/bin/npm-cli.js"
+    folder_name: "nodejs"
+
+  zig:
+    url: "https://ziglang.org/builds/zig-x86_64-windows-0.16.0-dev.1364+f0a3df98d.zip"
+    exe_path: "zig/zig-x86_64-windows-0.16.0-dev.1364+f0a3df98d/zig.exe"
+    folder_name: "zig"
+
+  conan:
+    url: "https://github.com/conan-io/conan/releases/download/2.22.2/conan-2.22.2-windows-x86_64.zip"
+    # CORRECTION ICI : On pointe directement sur conan.exe dans le dossier conan
+    exe_path: "conan/conan.exe"
+    folder_name: "conan"

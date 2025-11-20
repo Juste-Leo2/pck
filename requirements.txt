@@ -1,0 +1,5 @@
+typer
+rich
+pyyaml
+requests
+shellingham
