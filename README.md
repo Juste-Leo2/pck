@@ -87,8 +87,8 @@ PCK is written in **Python** and leverages the best modern tools:
 - [x] **C/C++ Support:** Integration of Zig as the compiler.
 - [ ] **Linux Support:** Adapt paths and binaries for Linux.
 - [ ] **Zig Lang Support:** Support for `.zig` files.
-- [ ] **Folder Management:** Improve clean-up and organization.
-- [ ] **Advanced C++:** Automatic linking between Conan packages and Zig compiler.
+- [x] **Folder Management:** Improve clean-up and organization.
+- [x] **Advanced C++:** Automatic linking between Conan packages and Zig compiler.
 
 ## ❤️ Acknowledgements
 

@@ -7,11 +7,12 @@ from rich.console import Console
 from rich.panel import Panel
 from src.download import ensure_tool_installed
 from src.utils import load_config, get_tool_path, get_npm_command
+from src import cpp_manager
 
 app = typer.Typer(help="PCK: The Universal Language Runner", add_completion=False)
 console = Console()
 
-# --- CHARGEMENT CONFIG ---
+# --- CONFIG ---
 try:
     config = load_config()
 except Exception as e:
@@ -21,13 +22,32 @@ except Exception as e:
 PCK_MAIN_SCRIPT = os.path.abspath(__file__)
 
 def run_command(cmd_list, cwd=None):
+    """Executes a system command (mainly used for Py and JS here)."""
     try:
+        # Convert all arguments to string just in case
         cmd_list = [str(c) for c in cmd_list]
         process = subprocess.run(cmd_list, cwd=cwd, shell=False)
         return process.returncode
     except Exception as e:
         console.print(f"[bold red]Execution Error:[/bold red] {e}")
         return 1
+
+def get_python_executable(cwd):
+    """
+    Detects if a .venv exists in the given directory.
+    Returns the path to the python executable inside .venv if it exists,
+    otherwise returns None.
+    """
+    venv_path = os.path.join(cwd, ".venv")
+    if os.path.exists(venv_path):
+        if os.name == 'nt':  # Windows
+            python_exe = os.path.join(venv_path, "Scripts", "python.exe")
+        else:  # Unix/Linux/Mac
+            python_exe = os.path.join(venv_path, "bin", "python")
+        
+        if os.path.exists(python_exe):
+            return python_exe
+    return None
 
 def interactive_shell():
     console.print(Panel("[bold cyan]🐚 PCK Shell Active[/bold cyan]\nType 'exit' to quit.", expand=False))
@@ -68,88 +88,98 @@ def main(ctx: typer.Context):
 
 @app.command()
 def version():
-    console.print("[bold cyan]PCK version 0.0.3[/bold cyan]")
+    console.print("[bold cyan]PCK version 0.0.4[/bold cyan]")
 
-# --- CORRECTION ICI ---
 @app.command()
 def create(
-    name: str = typer.Argument(".", help="Project name OR Python version (e.g. 3.11). Default: current dir."),
-    # On définit explicitement les drapeaux pour accepter le tiret unique
-    py: bool = typer.Option(False, "-py", "--py", help="Create Python project"),
+    name: str = typer.Argument(".", help="Project name (creates a folder). Default: current dir."),
+    py: str = typer.Option(None, "-py", "--py", help="Create Python project with version (e.g. -py 3.11)"),
     js: bool = typer.Option(False, "-js", "--js", help="Create Node.js project"),
     c: bool = typer.Option(False, "-c", help="Create C project"),
     cpp: bool = typer.Option(False, "-cpp", "--cpp", "-c++", help="Create C++ project"),
 ):
-    """Initialize environment. Supports -py 3.11 to install in current dir."""
+    """
+    Initialize environment. 
+    Example: 'pck create -py 3.11 test' creates a folder 'test' with a Python 3.11 environment.
+    """
     
     cwd = os.getcwd()
-    target_dir = cwd
-    version_arg = None
-
-    # Logique de détection Nom vs Version
-    if name[0].isdigit():
-        version_arg = name
-        target_dir = cwd
-    elif name == ".":
+    
+    # Define target directory
+    if name == ".":
         target_dir = cwd
     else:
         target_dir = os.path.join(cwd, name)
         if not os.path.exists(target_dir):
-            os.makedirs(target_dir)
+            try:
+                os.makedirs(target_dir)
+                console.print(f"[green]Created directory: {target_dir}[/green]")
+            except OSError as e:
+                console.print(f"[red]Error creating directory: {e}[/red]")
+                return
 
-    if py:
+    # --- PYTHON ---
+    if py is not None:
+        # Note: 'py' contains the version string (e.g., "3.11") or "default" if user handled differently
         uv_path = ensure_tool_installed("uv", config)
         console.print(f"[green]Creating Python environment in {target_dir}...[/green]")
+        
         cmd = [uv_path, "venv", ".venv"]
-        if version_arg:
-            cmd.extend(["-p", version_arg])
+        # If the user provided a specific version like "3.11", add it
+        if py and py.lower() != "true": 
+            cmd.extend(["--python", py])
+            
         run_command(cmd, cwd=target_dir)
 
+    # --- NODE.JS ---
     elif js:
-        node_path = ensure_tool_installed("node", config)
+        ensure_tool_installed("node", config)
         npm_cmd = get_npm_command(config)
         console.print(f"[green]Initializing Node.js in {target_dir}...[/green]")
         run_command(npm_cmd + ["init", "-y"], cwd=target_dir)
 
+    # --- C / C++ ---
     elif c or cpp:
-        ensure_tool_installed("zig", config)
-        conan_path = ensure_tool_installed("conan", config)
-        ext = "c" if c else "cpp"
-        
-        console.print(f"[green]Initializing {ext.upper()} environment in {target_dir}...[/green]")
-        run_command([conan_path, "profile", "detect", "--force"])
+        lang = "cpp" if cpp else "c"
+        console.print(f"[green]Initializing {lang.upper()} environment in {target_dir}...[/green]")
+        cpp_manager.create_project(config, target_dir, lang=lang)
 
-        main_file = os.path.join(target_dir, f"main.{ext}")
-        if not os.path.exists(main_file):
-            with open(main_file, "w") as f:
-                if c:
-                    f.write('#include <stdio.h>\n\nint main() {\n    printf("Hello from PCK C!\\n");\n    return 0;\n}')
-                else:
-                    f.write('#include <iostream>\n\nint main() {\n    std::cout << "Hello from PCK C++!" << std::endl;\n    return 0;\n}')
-            console.print(f"[blue]Created basic main.{ext}[/blue]")
     else:
-        console.print("[red]Please specify a language flag (-py, -js, -c, -cpp)[/red]")
+        console.print("[red]Please specify a language flag (-py [ver], -js, -c, -cpp)[/red]")
 
 @app.command()
 def install(package: str):
     cwd = os.getcwd()
     files = os.listdir(cwd)
     
+    # --- NODE.JS ---
     if "package.json" in files:
         ensure_tool_installed("node", config)
         npm_cmd = get_npm_command(config)
         console.print(f"[green]Installing {package} via npm...[/green]")
         run_command(npm_cmd + ["install", package])
         
+    # --- PYTHON ---
     elif "pyproject.toml" in files or ".venv" in files or any(f.endswith(".py") for f in files):
         uv_path = ensure_tool_installed("uv", config)
         console.print(f"[blue]Installing {package} via uv...[/blue]")
-        run_command([uv_path, "pip", "install", package])
         
-    elif any(f.endswith(('.c', '.cpp')) for f in files) or "conanfile.txt" in files:
-        conan_path = ensure_tool_installed("conan", config)
-        console.print(f"[orange3]Installing {package} via Conan...[/orange3]")
-        run_command([conan_path, "install", "--requires", package, "--build=missing", "-g", "CMakeDeps"])
+        # Check if we have a local environment to target specifically
+        local_python = get_python_executable(cwd)
+        
+        if local_python:
+            # Target the specific environment python
+            run_command([uv_path, "pip", "install", "--python", local_python, package])
+        else:
+            # Fallback to general install (might install in user scope or temp venv)
+            run_command([uv_path, "pip", "install", package])
+        
+    # --- C / C++ ---
+    # Detection: source files, conanfile, or the store folder
+    elif any(f.endswith(('.c', '.cpp')) for f in files) or "conanfile.txt" in files or os.path.exists(".conan_store"):
+        # Delegation to the C++ manager
+        cpp_manager.install_package(config, package)
+
     else:
         console.print("[red]Could not detect environment to install package.[/red]")
 
@@ -157,6 +187,7 @@ def install(package: str):
 def run(script: str = typer.Argument(None, help="Script file")):
     cwd = os.getcwd()
     
+    # Auto-detection of the script if not provided
     if not script:
         files = os.listdir(cwd)
         priority = ["main.py", "app.py", "index.js", "app.js", "main.c", "main.cpp"]
@@ -168,32 +199,31 @@ def run(script: str = typer.Argument(None, help="Script file")):
             console.print("[red]No script specified.[/red]")
             return
 
+    # --- PYTHON ---
     if script.endswith(".py"):
-        uv_path = ensure_tool_installed("uv", config)
-        run_command([uv_path, "run", script])
+        # 1. Check for local .venv
+        local_python = get_python_executable(cwd)
         
+        if local_python:
+            # Run using the local environment directly
+            console.print(f"[dim]Using local environment: {local_python}[/dim]")
+            run_command([local_python, script])
+        else:
+            # 2. Fallback to uv run (ephemeral or managed environment)
+            console.print("[dim]No local .venv found, using uv run...[/dim]")
+            uv_path = ensure_tool_installed("uv", config)
+            run_command([uv_path, "run", script])
+        
+    # --- NODE.JS ---
     elif script.endswith(".js"):
         ensure_tool_installed("node", config)
         node_path = get_tool_path("node", config)
         run_command([node_path, script])
         
-    elif script.endswith(".c"):
-        zig_path = ensure_tool_installed("zig", config)
-        exe_name = script.rsplit('.', 1)[0] + ".exe"
-        console.print(f"[orange3]Compiling {script}...[/orange3]")
-        ret = run_command([zig_path, "cc", script, "-o", exe_name])
-        if ret == 0:
-            console.print(f"[green]Running {exe_name}...[/green]")
-            run_command([os.path.join(cwd, exe_name)])
-            
-    elif script.endswith(".cpp"):
-        zig_path = ensure_tool_installed("zig", config)
-        exe_name = script.rsplit('.', 1)[0] + ".exe"
-        console.print(f"[orange3]Compiling {script}...[/orange3]")
-        ret = run_command([zig_path, "c++", script, "-o", exe_name])
-        if ret == 0:
-            console.print(f"[green]Running {exe_name}...[/green]")
-            run_command([os.path.join(cwd, exe_name)])
+    # --- C / C++ ---
+    elif script.endswith(".c") or script.endswith(".cpp"):
+        cpp_manager.run_script(config, script)
+        
     else:
         console.print(f"[red]Unknown file type: {script}[/red]")
 

@@ -7,6 +7,16 @@ tools:
     exe_path: "uv/uv.exe" 
     folder_name: "uv"
 
+  cmake:
+    url: "https://github.com/Kitware/CMake/releases/download/v3.31.1/cmake-3.31.1-windows-x86_64.zip"
+    exe_path: "cmake/cmake-3.31.1-windows-x86_64/bin/cmake.exe"
+    folder_name: "cmake"
+
+  ninja:
+    url: "https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip"
+    exe_path: "ninja/ninja.exe"
+    folder_name: "ninja"
+
   node:
     url: "https://nodejs.org/dist/v24.11.1/node-v24.11.1-win-x64.zip"
     exe_path: "nodejs/node-v24.11.1-win-x64/node.exe"
@@ -20,6 +30,5 @@ tools:
 
   conan:
     url: "https://github.com/conan-io/conan/releases/download/2.22.2/conan-2.22.2-windows-x86_64.zip"
-    # CORRECTION ICI : On pointe directement sur conan.exe dans le dossier conan
     exe_path: "conan/conan.exe"
     folder_name: "conan"

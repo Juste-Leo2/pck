@@ -1,8 +1,7 @@
 import yaml
 import os
 
-# On récupère le chemin absolu du dossier parent de ce fichier (src/ -> pck/)
-# __file__ est le chemin de utils.py
+
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def load_config():
@@ -10,7 +9,7 @@ def load_config():
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
     
-    # On force le chemin absolu pour le dossier 'langage' dans la config chargée
+    # Force the absolute path for the "language" folder in the loaded configuration
     base_setting = config['settings']['base_dir']
     if not os.path.isabs(base_setting):
         config['settings']['base_dir'] = os.path.join(ROOT_DIR, base_setting)
