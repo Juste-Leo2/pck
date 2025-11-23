@@ -1,104 +1,77 @@
 # 📦 PCK: The Universal Language Runner
 
 > **Stop fighting your environment. Start coding.**
-> A zero-config, plug-and-play CLI to create, manage, and run projects in Python, Node.js, and C/C++.
+> A zero-config CLI to create, manage, and run projects in Python, Node.js, and C/C++.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Status](https://img.shields.io/badge/Status-Work_in_Progress-orange)]()
+[![Releases](https://img.shields.io/github/v/release/Juste-Leo2/pck)](https://github.com/Juste-Leo2/pck/releases)
 
-## 💡 The Concept
+## 💡 What is PCK?
 
-For beginners, setting up a development environment is often harder than learning to code. `PATH` errors, missing compilers, version conflicts... it's a nightmare.
+PCK is a portable wrapper that standardizes how you interact with programming languages. It automatically handles the underlying tools (`uv`, `node`, `zig`, `conan`) in **hermetic environments**.
 
-**PCK** solves this by acting as a smart wrapper. It automatically handles the underlying tools (`uv`, `node`, `zig`, `conan`) in **hermetic environments**. You don't need to install GCC globally or mess with system Python versions. It just works.
+*   No global pollution.
+*   No version conflicts.
+*   One syntax for all languages.
 
-## ✨ Features
+## 📥 Installation
 
-- **Unified Workflow:** Use the same commands (`create`, `install`, `run`) regardless of the language.
-- **Portable Tools:** Tools are installed locally in the PCK installation folder. No global pollution.
-- **Modern Stack:**
-    - 🐍 **Python:** Powered by `uv` for lightning-fast virtual environments.
-    - 🟨 **Node.js:** Auto-downloads portable Node binaries.
-    - ⚙️ **C/C++:** Uses **Zig** as a portable C compiler (no need for Visual Studio or GCC installation) & **Conan** for packages.
-- **Interactive Shell:** PCK launches as a shell, keeping your context and variables ready.
+### Option 1: Standalone Executable (Recommended)
+No Python or dependencies required. Just download and run.
 
-## 📥 Installation & Startup
+1.  Download the latest **`pck.exe`** from the **[Releases Page](https://github.com/Juste-Leo2/pck/releases/)**.
+2.  Add the file to your system **PATH** to use it from any terminal.
 
-No complex installation required. This tool is designed to be portable.
+### Option 2: Manual Installation (via Pip)
+If you prefer running from source or have Python installed:
 
-### 1. First Setup
-Run this script **only once** to prepare the internal environment.
 ```bash
-setup_env_win.bat
-```
+# Clone the repository
+git clone https://github.com/Juste-Leo2/pck.git
+cd pck
 
-### 2. Launch PCK
-To start coding, simply run:
-```bash
-run_win.bat
+# Install via pip (requires Python 3.8+)
+pip install .
 ```
-*This opens the **PCK Shell**, ready for your commands.*
 
 ## 🚀 Usage
 
-Once inside the PCK Shell, you can navigate your folders and use the `pck` commands.
+Once installed, simply type `pck` to enter the interactive shell, or run commands directly.
 
-### 1. Create a project (In-Place or New Folder)
-PCK works where you are.
-
-```bash
-# In the current directory
-pck create -py 3.11    # Sets up Python 3.11 environment here
-pck create -c          # Creates a main.c here
-
-# Or create a new folder
-pck create -js my-app  # Creates 'my-app' folder with Node.js init
-```
-
-### 2. Manage dependencies
-One command to rule them all. PCK detects the environment context.
+### 1. Create a Project
+Initialize a clean environment instantly.
 
 ```bash
-pck install requests    # Detects Python -> calls 'uv pip install requests'
-pck install figlet      # Detects Node -> calls 'npm install figlet'
-pck install fmt/10.2.1  # Detects C/C++ -> calls 'conan install ...'
+pck create -py 3.11   # Python 3.11 environment
+pck create -js        # Node.js project
+pck create -c MyProjectFolder        # C project (compiled via Zig), optional creates a folder
 ```
 
-### 3. Run instantly
-No compilation flags to remember. PCK detects `main.py`, `index.js`, or `main.c`.
+
+
+### 2. Install Dependencies
+PCK detects the language context and uses the appropriate package manager (`pip`, `npm`, or `conan`).
 
 ```bash
-pck run
+pck install requests      # Python
+pck install figlet        # Node.js
+pck install fmt/10.2.1    # C++
 ```
-*For C/C++, this automatically downloads Zig, compiles your code to an .exe, and runs it.*
 
-## 🛠️ Architecture
+### 3. Run
+Forget compilation flags. Just run your code.
 
-PCK is written in **Python** and leverages the best modern tools:
-- **CLI Framework:** [Typer](https://typer.tiangolo.com/)
-- **UI/Formatting:** [Rich](https://github.com/Textualize/rich)
-- **Backend Tools:** `uv`, `npm`, `zig`, `conan`
+```bash
+pck run main.py
+```
 
-## 🗺️ Roadmap
+## 🛠️ Powered By
 
-- [x] **MVP:** Basic CLI structure with Typer & Rich.
-- [x] **Python Support:** Integration with `uv`.
-- [x] **Node.js Support:** Auto-download of Node binaries.
-- [x] **C/C++ Support:** Integration of Zig as the compiler.
-- [ ] **Linux Support:** Adapt paths and binaries for Linux.
-- [ ] **Zig Lang Support:** Support for `.zig` files.
-- [x] **Folder Management:** Improve clean-up and organization.
-- [x] **Advanced C++:** Automatic linking between Conan packages and Zig compiler.
-
-## ❤️ Acknowledgements
-
-This project stands on the shoulders of giants. It wouldn't exist without these incredible open-source technologies that make modern development possible:
-
-- **[uv](https://github.com/astral-sh/uv):** An extremely fast Python package installer and resolver.
-- **[Zig](https://ziglang.org/):** A general-purpose programming language and toolchain for maintaining robust, optimal, and reusable software.
-- **[Conan](https://conan.io/):** The C/C++ Package Manager.
-- **[Node.js](https://nodejs.org/):** The JavaScript runtime built on Chrome's V8 JavaScript engine.
+PCK leverages the fastest modern tools under the hood:
+*   **[uv](https://github.com/astral-sh/uv)** for Python.
+*   **[Zig](https://ziglang.org/)** for C/C++ compilation.
+*   **[Conan](https://conan.io/)** for C++ dependency management.
 
 ## 📄 License
 
-This project is licensed under the **MIT License**. Feel free to fork, contribute, and learn!
+This project is licensed under the **MIT License**.

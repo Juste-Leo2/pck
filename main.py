@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import shlex
+from importlib.metadata import version as get_version
 from rich.console import Console
 from rich.panel import Panel
 from src.download import ensure_tool_installed
@@ -72,7 +73,11 @@ def interactive_shell():
 
             if user_input.lower().startswith("pck "):
                 args = shlex.split(user_input[4:])
-                subprocess.run([sys.executable, PCK_MAIN_SCRIPT] + args)
+                
+                if getattr(sys, 'frozen', False):
+                    subprocess.run([sys.executable] + args)
+                else:
+                    subprocess.run([sys.executable, PCK_MAIN_SCRIPT] + args)
                 continue
 
             subprocess.run(user_input, shell=True)
@@ -81,6 +86,7 @@ def interactive_shell():
         except Exception as e:
             console.print(f"[bold red]Shell Error:[/bold red] {e}")
 
+
 @app.callback(invoke_without_command=True)
 def main(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
@@ -88,7 +94,11 @@ def main(ctx: typer.Context):
 
 @app.command()
 def version():
-    console.print("[bold cyan]PCK version 0.0.4[/bold cyan]")
+    try:
+        ver = get_version("pck")
+    except:
+        ver = "0.0.0"
+    console.print(f"[bold cyan]PCK version {ver}[/bold cyan]")
 
 @app.command()
 def create(
